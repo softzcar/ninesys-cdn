@@ -1,0 +1,31 @@
+# Ignorar las carpetas de dependencias
+/vendor/
+/node_modules/
+
+# Ignorar archivos y carpetas de configuraciones específicas del sistema
+/.vscode/
+/.idea/
+/.DS_Store
+
+# Ignorar archivos generados por Composer
+composer.lock
+
+# Ignorar archivos temporales
+/var/
+
+# Ignorar carpetas de trabajo y respaldos
+merc/
+/cgi-bin/
+
+# Ignorar logs y otros archivos
+error_log
+
+# Incluir específicamente no-image.png y omitir el resto en /images
+/images/*
+!/images/no-image.png
+
+# Ignorar archivos .bak
+*.bak
+
+# Ignorar otros archivos específicos de la aplicación
+error_log
