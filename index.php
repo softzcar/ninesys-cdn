@@ -14,9 +14,12 @@ if ($method === 'OPTIONS') {
     exit();
 }
 
+// Get params
+$id_empresa = isset($_REQUEST['id_empresa']) ? $_REQUEST['id_empresa'] : null;
+$id_orden = isset($_REQUEST['id_orden']) ? $_REQUEST['id_orden'] : null;
+
 // Create Path
-$imagePath = 'images/' . $_GET['id_empresa'] . '/' . $_GET['id_orden'] . '/';
-$imagePathBack = 'images/' . $_GET['id_empresa'] . '/' . $_GET['id_orden'] . '/';
+$imagePath = 'images/' . $id_empresa . '/';
 
 if ($method === 'POST') {
     $file_upload_flag = true;  // Flag to check conditions
@@ -38,7 +41,7 @@ if ($method === 'POST') {
         $extension = '.png';
 
         // Create the correlated name for the review image.
-        $file_name = $_GET['id_orden'] . '-' . $_GET['review'] . '-' . $_GET['id_empleado'] . $extension;
+        $file_name = $id_orden . $extension;
 
         // Create directories if they do not exist
         if (!file_exists($imagePath)) {
@@ -50,15 +53,6 @@ if ($method === 'POST') {
     $add = $imagePath . $file_name;
 
     if ($file_upload_flag) {  // Checking the Flag value
-        // Remove previous file
-        unlink($imagePath . $_GET['id_orden'] . '-' . $_GET['review'] . '-' . $_GET['id_empleado'] . '.jpg');
-        unlink($imagePath . $_GET['id_orden'] . '-' . $_GET['review'] . '-' . $_GET['id_empleado'] . '.jpeg');
-        unlink($imagePath . $_GET['id_orden'] . '-' . $_GET['review'] . '-' . $_GET['id_empleado'] . '.png');
-        unlink($imagePath . $_GET['id_orden'] . '-' . $_GET['review'] . '-' . $_GET['id_empleado'] . '.gif');
-        unlink($imagePath . $_GET['id_orden'] . '-' . $_GET['review'] . '-' . $_GET['id_empleado'] . '.webp');
-        unlink($imagePath . $_GET['id_orden'] . '-' . $_GET['review'] . '-' . $_GET['id_empleado'] . '.tif');
-        unlink($imagePath . $_GET['id_orden'] . '-' . $_GET['review'] . '-' . $_GET['id_empleado'] . '.tiff');
-
         // Obtener contenido del archivo
         $fileTmpPath = $_FILES['file']['tmp_name'];
 
@@ -130,15 +124,13 @@ if ($method === 'POST') {
         $resp['uploaded'] = false;
     }
 } else if ($method === 'GET') {
-    $_GET['review'] = ($_GET['review'] === 'undefined' || $_GET['review'] === 'null') ? '1' : $_GET['review'];
-    $imagenes = glob($imagePath . $_GET['id_orden'] . '-' . $_GET['review'] . '-' . $_GET['id_empleado'] . '.{jpg,png,gif,webp,tif,tiff}', GLOB_BRACE);
+    $imagenes = glob($imagePath . $id_orden . '.{jpg,png,gif,webp,tif,tiff}', GLOB_BRACE);
 
     if (count($imagenes) === 0 || $imagenes === null) {
         $resp['url'] = 'images/no-image.png';
         $resp['mensaje'] = 'No se encontró el diseño';
         $resp['type_images'] = $imagenes;
-        $resp['GET'] = $_GET;
-        $resp['url_bak'] = $imagePathBack;
+        $resp['REQUEST'] = $_REQUEST;
     } else {
         $resp['url'] = $imagenes[0];
     }
@@ -147,6 +139,32 @@ if ($method === 'POST') {
         $resp['url'] = 'images/no-image.png';
         $resp['mensaje'] = 'No se encontró el diseño';
         $resp['type_url'] = 'NONE';
+    }
+} else if ($method === 'DELETE') {
+    if (!$id_empresa || !$id_orden) {
+        $resp['deleted'] = false;
+        $resp['msg'] = 'id_empresa and id_orden are required for deletion.';
+    } else {
+        $imagenes = glob($imagePath . $id_orden . '.{jpg,png,gif,webp,tif,tiff}', GLOB_BRACE);
+
+        if (count($imagenes) > 0) {
+            $deleted_count = 0;
+            foreach ($imagenes as $imagen) {
+                if (unlink($imagen)) {
+                    $deleted_count++;
+                }
+            }
+            if ($deleted_count > 0) {
+                $resp['deleted'] = true;
+                $resp['msg'] = $deleted_count . ' image(s) deleted successfully.';
+            } else {
+                $resp['deleted'] = false;
+                $resp['msg'] = 'Could not delete the image(s). Check file permissions.';
+            }
+        } else {
+            $resp['deleted'] = false;
+            $resp['msg'] = 'No image found to delete.';
+        }
     }
 }
 
