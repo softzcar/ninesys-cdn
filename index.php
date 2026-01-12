@@ -12,11 +12,14 @@ if ($method === 'OPTIONS') {
     // Manejar la solicitud preflight CORS
     header('HTTP/1.1 200 OK');
     exit();
-}
+} 
 
 // Get params
 $id_empresa = isset($_REQUEST['id_empresa']) ? $_REQUEST['id_empresa'] : null;
 $id_orden = isset($_REQUEST['id_orden']) ? $_REQUEST['id_orden'] : null;
+$id = isset($_REQUEST['id']) ? $_REQUEST['id'] : null;
+$review = isset($_REQUEST['review']) ? $_REQUEST['review'] : null;
+$aprobada = isset($_REQUEST['aprobada']) ? $_REQUEST['aprobada'] : null;
 
 // Create Path
 $imagePath = 'images/' . $id_empresa . '/';
@@ -40,8 +43,16 @@ if ($method === 'POST') {
         // Set new file name with .png extension
         $extension = '.png';
 
-        // Create the correlated name for the review image.
-        $file_name = $id_orden . $extension;
+        // Create the correlated name for the review image
+        // For POST requests, id_orden comes from the 'id' parameter
+        $orden_id = $id ?: $id_orden;
+
+        // If aprobada=true, use special naming: [id_orden]-a.png
+        if ($aprobada === 'true') {
+            $file_name = $orden_id . '-a' . $extension;
+        } else {
+            $file_name = $orden_id . '-' . $review . $extension;
+        }
 
         // Create directories if they do not exist
         if (!file_exists($imagePath)) {
@@ -124,7 +135,16 @@ if ($method === 'POST') {
         $resp['uploaded'] = false;
     }
 } else if ($method === 'GET') {
-    $imagenes = glob($imagePath . $id_orden . '.{jpg,png,gif,webp,tif,tiff}', GLOB_BRACE);
+    // If aprobada=true, search for approved image: [id_orden]-a.png
+    if ($aprobada === 'true') {
+        $imagenes = glob($imagePath . $id_orden . '-a.{jpg,png,gif,webp,tif,tiff}', GLOB_BRACE);
+    } elseif ($review) {
+        // If review is provided, search for specific revision file: [id_orden]-[review].png
+        $imagenes = glob($imagePath . $id_orden . '-' . $review . '.{jpg,png,gif,webp,tif,tiff}', GLOB_BRACE);
+    } else {
+        // If no review, search for all files of the order
+        $imagenes = glob($imagePath . $id_orden . '.{jpg,png,gif,webp,tif,tiff}', GLOB_BRACE);
+    }
 
     if (count($imagenes) === 0 || $imagenes === null) {
         $resp['url'] = 'images/no-image.png';
@@ -145,7 +165,16 @@ if ($method === 'POST') {
         $resp['deleted'] = false;
         $resp['msg'] = 'id_empresa and id_orden are required for deletion.';
     } else {
-        $imagenes = glob($imagePath . $id_orden . '.{jpg,png,gif,webp,tif,tiff}', GLOB_BRACE);
+        // If aprobada=true, delete approved image: [id_orden]-a.png
+        if ($aprobada === 'true') {
+            $imagenes = glob($imagePath . $id_orden . '-a.{jpg,png,gif,webp,tif,tiff}', GLOB_BRACE);
+        } elseif ($review) {
+            // If review is provided, delete specific revision file: [id_orden]-[review].png
+            $imagenes = glob($imagePath . $id_orden . '-' . $review . '.{jpg,png,gif,webp,tif,tiff}', GLOB_BRACE);
+        } else {
+            // If no review, delete all files of the order
+            $imagenes = glob($imagePath . $id_orden . '.{jpg,png,gif,webp,tif,tiff}', GLOB_BRACE);
+        }
 
         if (count($imagenes) > 0) {
             $deleted_count = 0;
