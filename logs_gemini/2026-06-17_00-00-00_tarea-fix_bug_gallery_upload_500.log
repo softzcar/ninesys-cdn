@@ -1,0 +1,11 @@
+LOG DE TAREA: Solución de Error 500 en Subida de Galería (CDN)
+Fecha: 2026-06-17
+Estado: COMPLETADO ✅
+
+Detalles:
+- Se identificó un fallo en el VPS de Desarrollo debido a que el directorio temporal de swap para OpenLiteSpeed en `/tmp/lshttpd/swap/s3` no existía (borrado por un script del sistema). Se reinició OpenLiteSpeed (`systemctl restart lshttpd`) para recrear los directorios.
+- Se identificó que en el VPS de Producción el archivo index.php no tenía implementadas las acciones de galería y contenía URLs de desarrollo.
+- Se refactorizó index.php en ninesys-cdn para autodetectar dinámicamente la URL base mediante $_SERVER['HTTP_HOST'] y $_SERVER['HTTPS'].
+- Se sincronizó el repositorio remoto en GitHub.
+- Se descartaron cambios antiguos no confirmados y se actualizó index.php en producción (`git pull origin main`).
+- Se ajustaron los permisos a cdnni8801 y se reinició OpenLiteSpeed en producción.
