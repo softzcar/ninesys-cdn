@@ -13,6 +13,9 @@ if ($method === 'OPTIONS') {
     exit();
 }
 
+$protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
+$baseUrl  = $protocol . '://' . $_SERVER['HTTP_HOST'] . '/';
+
 // Get params
 $id_empresa = isset($_REQUEST['id_empresa']) ? $_REQUEST['id_empresa'] : null;
 $id_orden   = isset($_REQUEST['id_orden'])   ? $_REQUEST['id_orden']   : null;
@@ -68,7 +71,7 @@ if ($gallery_action === 'gallery_upload') {
     imagecopyresampled($out, $img, 0, 0, 0, 0, $nw, $nh, $w, $h);
     imagepng($out, $dest, 8);
     imagedestroy($img); imagedestroy($out);
-    echo json_encode(['uploaded' => true, 'url' => 'https://cdn.nineteengreen.com/' . $dest, 'filename' => $filename]);
+    echo json_encode(['uploaded' => true, 'url' => $baseUrl . $dest, 'filename' => $filename]);
     exit();
 }
 
@@ -135,7 +138,7 @@ if ($method === 'POST') {
                     } else {
                         imagedestroy($image);
                         imagedestroy($resized_image);
-                        $resp['url']      = 'https://cdn.nineteengreen.com/' . $add;
+                        $resp['url']      = $baseUrl . $add;
                         $resp['uploaded'] = true;
                         $resp['msg']      = 'El archivo se ha subido y redimensionado correctamente.';
                     }
@@ -163,7 +166,7 @@ if ($method === 'POST') {
         rsort($allFiles);
         $filtered = [];
         foreach ($allFiles as $file) {
-            $filtered[] = 'https://cdn.nineteengreen.com/' . $file;
+            $filtered[] = $baseUrl . $file;
         }
         $filtered = array_slice($filtered, 0, 100);
         echo json_encode(['images' => $filtered, 'count' => count($filtered)]);
@@ -195,7 +198,7 @@ if ($method === 'POST') {
         }
         $allFiles = glob($galleryPath . '*.{jpg,jpeg,png,webp,gif}', GLOB_BRACE) ?: [];
         sort($allFiles);
-        $images = array_map(fn($f) => 'https://cdn.nineteengreen.com/' . $f, $allFiles);
+        $images = array_map(fn($f) => $baseUrl . $f, $allFiles);
         echo json_encode(['images' => $images, 'count' => count($images)]);
         exit();
     }
