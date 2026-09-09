@@ -16,11 +16,18 @@ if ($method === 'OPTIONS') {
 $protocol = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') ? 'https' : 'http';
 $baseUrl  = $protocol . '://' . $_SERVER['HTTP_HOST'] . '/';
 
-// Get params
-$id_empresa = isset($_REQUEST['id_empresa']) ? $_REQUEST['id_empresa'] : null;
-$id_orden   = isset($_REQUEST['id_orden'])   ? $_REQUEST['id_orden']   : null;
-$id         = isset($_REQUEST['id'])         ? $_REQUEST['id']         : null;
-$review     = isset($_REQUEST['review'])     ? $_REQUEST['review']     : null;
+// Get params -- id_empresa/id_orden/id se usan crudos para armar rutas de
+// archivo y patrones glob (abajo); sin sanear, un id_orden como "../../../etc"
+// permite escapar del directorio images/ tanto para lectura como para
+// BORRADO (unlink) -- auditoría de seguridad 2026-09-09. Son identificadores
+// numéricos de negocio (id de empresa / id de orden), así que castear a
+// entero es seguro y no cambia el comportamiento para uso legítimo.
+$id_empresa = isset($_REQUEST['id_empresa']) && $_REQUEST['id_empresa'] !== '' ? intval($_REQUEST['id_empresa']) : null;
+$id_orden   = isset($_REQUEST['id_orden'])   && $_REQUEST['id_orden']   !== '' ? intval($_REQUEST['id_orden'])   : null;
+$id         = isset($_REQUEST['id'])         && $_REQUEST['id']         !== '' ? intval($_REQUEST['id'])         : null;
+// $review no es necesariamente numérico -- se sanea a alfanumérico (sin
+// '/', '.', '\') en vez de intval() para no romper valores legítimos.
+$review     = isset($_REQUEST['review']) ? preg_replace('/[^a-zA-Z0-9_-]/', '', $_REQUEST['review']) : null;
 $aprobada   = isset($_REQUEST['aprobada'])   ? $_REQUEST['aprobada']   : null;
 
 // Create Path
