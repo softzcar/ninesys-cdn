@@ -1,6 +1,20 @@
 <?php
-// Configurar encabezados CORS
-header('Access-Control-Allow-Origin: *');
+// Configurar encabezados CORS -- antes '*' (cualquier sitio en Internet podía
+// hacer fetch() cross-origin contra este CDN desde el navegador de un
+// visitante, auditoría de seguridad 2026-09-09/10). Solo app_multi llama
+// desde el navegador (subir/listar/borrar de Galería); las imágenes servidas
+// vía <img src> no necesitan CORS en absoluto (el navegador las carga cross-
+// origin igual, con o sin esta cabecera).
+$allowedOrigins = [
+    'https://app.ninesys19.com',
+    'https://app.nineteengreen.com',
+    'http://localhost:3000',
+];
+$requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($requestOrigin, $allowedOrigins, true)) {
+    header('Access-Control-Allow-Origin: ' . $requestOrigin);
+}
+header('Vary: Origin');
 header('Content-Type: application/json; charset=UTF-8');
 header('Access-Control-Allow-Methods: POST, GET, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization');
