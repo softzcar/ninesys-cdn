@@ -1,4 +1,19 @@
 <?php
+// Cargador mínimo de .env (este repo nunca tuvo Composer/dotenv) -- auditoría
+// de seguridad 2026-09-10, ver jwt_verify.php.
+$envFile = __DIR__ . '/.env';
+if (file_exists($envFile)) {
+    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) {
+            continue;
+        }
+        [$key, $value] = explode('=', $line, 2);
+        putenv(trim($key) . '=' . trim($value));
+    }
+}
+require_once __DIR__ . '/jwt_verify.php';
+
 // Configurar encabezados CORS -- antes '*' (cualquier sitio en Internet podía
 // hacer fetch() cross-origin contra este CDN desde el navegador de un
 // visitante, auditoría de seguridad 2026-09-09/10). Solo app_multi llama
@@ -51,6 +66,7 @@ $imagePath = 'images/' . $id_empresa . '/';
 $gallery_action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 if ($gallery_action === 'gallery_upload') {
     $id      = intval($_REQUEST['id_empresa'] ?? 0);
+    exigirSesionCdn($id ?: null);
     $product = preg_replace('/[^a-z0-9\-]/', '', strtolower($_REQUEST['product'] ?? ''));
     if (!$id || !$product || empty($_FILES['file']['tmp_name'])) {
         echo json_encode(['uploaded' => false, 'msg' => 'Parámetros incompletos']);
@@ -97,6 +113,7 @@ if ($gallery_action === 'gallery_upload') {
 }
 
 if ($method === 'POST') {
+    exigirSesionCdn($id_empresa);
     $file_upload_flag = true;
     $file_up_size = $_FILES['file']['size'];
 
@@ -178,6 +195,7 @@ if ($method === 'POST') {
             echo json_encode(['images' => [], 'count' => 0]);
             exit();
         }
+        exigirSesionCdn($id_empresa);
         $galleryPath = 'images/' . intval($id_empresa) . '/';
         if (!is_dir($galleryPath)) {
             echo json_encode(['images' => [], 'count' => 0]);
@@ -201,6 +219,7 @@ if ($method === 'POST') {
             echo json_encode(['images' => [], 'count' => 0]);
             exit();
         }
+        exigirSesionCdn($id);
         $galleryPath = 'images/' . $id . '/gallery/' . $product . '/';
         if (!is_dir($galleryPath)) {
             // Buscar coincidencia por prefijo: 'chaqueta' encuentra 'chaquetas' y viceversa
@@ -227,6 +246,7 @@ if ($method === 'POST') {
     if ($action === 'gallery_categories') {
         $id = intval($id_empresa ?? 0);
         if (!$id) { echo json_encode(['categories' => []]); exit(); }
+        exigirSesionCdn($id);
         $base = 'images/' . $id . '/gallery/';
         $cats = [];
         if (is_dir($base)) {
@@ -265,6 +285,7 @@ if ($method === 'POST') {
     }
 
 } else if ($method === 'DELETE') {
+    exigirSesionCdn($id_empresa);
     $del_action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 
     // ── Creación de categoría de galería (directorio vacío) ───────────────
