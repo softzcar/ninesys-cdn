@@ -1,4 +1,18 @@
 RewriteEngine on
+
+# error_log y logs_gemini/ no deben ser accesibles por HTTP -- auditoría de
+# seguridad 2026-09-15. Antes de este fix ambos devolvían 200 públicamente
+# (confirmado con curl en Desarrollo Y Producción): error_log expone rutas
+# absolutas del servidor, y logs_gemini/ contiene las bitácoras internas de
+# auditoría de seguridad de este mismo proyecto (potencial mapa de
+# vulnerabilidades para un atacante). Mismo mecanismo (RewriteRule ... [F,L])
+# que ya usa CyberPanel a nivel de servidor para .env/.git, confirmado que
+# SÍ es honrado por este vhost. IMPORTANTE: estas reglas deben ir ANTES de
+# la regla catch-all de abajo -- esa regla matchea (.*) con [L], así que
+# corta el procesamiento del archivo y nunca llega a reglas puestas después.
+RewriteRule (^|/)error_log$ - [F,L]
+RewriteRule (^|/)logs_gemini(/|$) - [F,L]
+
 RewriteRule ^$ / [L]
 RewriteRule (.*) /$1 [L]
 
@@ -9,14 +23,3 @@ RewriteRule (.*) /$1 [L]
 # curl contra un archivo estático) pero se retira igual por prolijidad,
 # para no confundir a un futuro lector con una regla muerta que parece
 # contradecir el whitelist de index.php.
-
-# error_log y logs_gemini/ no deben ser accesibles por HTTP -- auditoría de
-# seguridad 2026-09-15. Antes de este fix ambos devolvían 200 públicamente
-# (confirmado con curl en Desarrollo Y Producción): error_log expone rutas
-# absolutas del servidor, y logs_gemini/ contiene las bitácoras internas de
-# auditoría de seguridad de este mismo proyecto (potencial mapa de
-# vulnerabilidades para un atacante). Mismo mecanismo (RewriteRule ... [F,L])
-# que ya usa CyberPanel a nivel de servidor para .env/.git, confirmado que
-# SÍ es honrado por este vhost.
-RewriteRule (^|/)error_log$ - [F,L]
-RewriteRule (^|/)logs_gemini(/|$) - [F,L]
