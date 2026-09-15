@@ -114,6 +114,15 @@ if ($gallery_action === 'gallery_upload') {
 
 if ($method === 'POST') {
     exigirSesionCdn($id_empresa);
+    // Auditoría de seguridad 2026-09-15: sin este guard, un POST sin campo
+    // 'file' (malformado, o sin multipart) generaba "Undefined index: file"
+    // en cada acceso a $_FILES['file'][...] de abajo -- esto es lo que creó
+    // el error_log histórico (2022-2023) que terminó expuesto públicamente
+    // (ver logs_gemini/2026-09-15_*_tarea-fase-c-seguridad.log).
+    if (!isset($_FILES['file'])) {
+        echo json_encode(['uploaded' => false, 'msg' => 'No se recibió ningún archivo.']);
+        exit();
+    }
     $file_upload_flag = true;
     $file_up_size = $_FILES['file']['size'];
 

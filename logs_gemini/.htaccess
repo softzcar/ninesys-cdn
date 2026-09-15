@@ -1,0 +1,12 @@
+RewriteEngine on
+
+# Bloquea todo acceso HTTP a este directorio -- auditoría de seguridad
+# 2026-09-15. Contiene las bitácoras internas de auditoría de este mismo
+# proyecto (incluyendo detalle de vulnerabilidades encontradas, algunas aún
+# sin corregir en Producción al momento de esta bitácora) -- nunca deben ser
+# públicas. Confirmado que una regla en el .htaccess RAÍZ del sitio NO surte
+# efecto en este servidor (el vhost tiene su propio bloque "rewrite{}" a
+# nivel de servidor que shadowea el .htaccess de la raíz del docroot) -- un
+# .htaccess puesto DENTRO de un subdirectorio sí es honrado (igual que
+# images/.htaccess), por eso el bloqueo va aquí y no en la raíz.
+RewriteRule .* - [F,L]
