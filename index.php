@@ -82,7 +82,7 @@ if ($gallery_action === 'gallery_upload') {
     $orig = trim(preg_replace('/-+/', '-', $orig), '-');
     if (!$orig) $orig = 'imagen';
     $galleryDir = 'images/' . $id . '/gallery/' . $product . '/';
-    if (!file_exists($galleryDir)) mkdir($galleryDir, 0777, true);
+    if (!file_exists($galleryDir)) mkdir($galleryDir, 0755, true);
     $filename = $orig . '.png';
     $i = 1;
     while (file_exists($galleryDir . $filename)) {
@@ -135,7 +135,7 @@ if ($method === 'POST') {
         } else {
             $file_name = $orden_id . '-' . $review . $extension;
         }
-        if (!file_exists($imagePath)) mkdir($imagePath, 0777, true);
+        if (!file_exists($imagePath)) mkdir($imagePath, 0755, true);
     }
 
     $add = $imagePath . $file_name;
@@ -301,7 +301,7 @@ if ($method === 'POST') {
             echo json_encode(['created' => false, 'msg' => 'La categoría ya existe']);
             exit();
         }
-        $ok = mkdir($categoryDir, 0777, true);
+        $ok = mkdir($categoryDir, 0755, true);
         echo json_encode(['created' => $ok, 'name' => $product]);
         exit();
     }

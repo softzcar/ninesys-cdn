@@ -1,6 +1,22 @@
 RewriteEngine on
 RewriteRule ^$ / [L]
 RewriteRule (.*) /$1 [L]
-<IfModule mod_headers.c>
-    Header set Access-Control-Allow-Origin "*"
-</IfModule>
+
+# El CORS real vive en index.php (whitelist de orígenes) -- auditoría de
+# seguridad 2026-09-15. La directiva "Header set ... *" que estuvo aquí
+# antes no tenía ningún efecto real en este servidor (LiteSpeed no honra
+# mod_headers vía .htaccess en este vhost, verificado empíricamente con
+# curl contra un archivo estático) pero se retira igual por prolijidad,
+# para no confundir a un futuro lector con una regla muerta que parece
+# contradecir el whitelist de index.php.
+
+# error_log y logs_gemini/ no deben ser accesibles por HTTP -- auditoría de
+# seguridad 2026-09-15. Antes de este fix ambos devolvían 200 públicamente
+# (confirmado con curl en Desarrollo Y Producción): error_log expone rutas
+# absolutas del servidor, y logs_gemini/ contiene las bitácoras internas de
+# auditoría de seguridad de este mismo proyecto (potencial mapa de
+# vulnerabilidades para un atacante). Mismo mecanismo (RewriteRule ... [F,L])
+# que ya usa CyberPanel a nivel de servidor para .env/.git, confirmado que
+# SÍ es honrado por este vhost.
+RewriteRule (^|/)error_log$ - [F,L]
+RewriteRule (^|/)logs_gemini(/|$) - [F,L]

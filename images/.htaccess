@@ -1,2 +1,12 @@
 RewriteEngine On
 ErrorDocument 404 /images/ /
+
+# Defensa en profundidad contra webshell -- auditoría de seguridad
+# 2026-09-15. Hoy el código nunca deja que un atacante controle la
+# extensión del archivo guardado (index.php fuerza .png en toda subida),
+# pero eso es la ÚNICA barrera -- confirmado en vivo que un .php subido
+# aquí por fuera del flujo normal de la app SE EJECUTA (probado con SSH
+# directo en Desarrollo: devolvió el resultado del script, no el código
+# fuente). Esta regla bloquea la ejecución de cualquier script server-side
+# dentro de images/ sin importar cómo haya llegado el archivo ahí.
+RewriteRule \.(php[3457]?|phtml|phar|pht|cgi|pl)$ - [F,L]

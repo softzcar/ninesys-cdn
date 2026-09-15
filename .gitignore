@@ -1,2 +1,5 @@
 # Secretos (auditoría de seguridad 2026-09-10) -- ver .env.example
 .env
+
+# error_log viejo del hosting anterior (2022-2023), sin escritor vivo hoy
+error_log
