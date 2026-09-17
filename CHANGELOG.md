@@ -4,6 +4,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/), v
 
 Ver también `ninesys-hub/releases/` para el contexto de negocio detrás de cada cambio (qué problema resolvía, qué otros repos se tocaron junto con este).
 
+## [v1.0.4] - 2026-09-16
+- fix compat PHP 7.4: str_contains -> strpos (causaba 500 real en Producción)
+
 ## [v1.0.3] - 2026-09-16
 - Fase de seguridad: webshell cerrado, logs/bitácoras expuestas cerradas, CORS verificado
 
