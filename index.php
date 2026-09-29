@@ -32,7 +32,8 @@ if (in_array($requestOrigin, $allowedOrigins, true)) {
 header('Vary: Origin');
 header('Content-Type: application/json; charset=UTF-8');
 header('Access-Control-Allow-Methods: POST, GET, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization');
+header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Internal-Token');
+
 
 // Obtener el método HTTP
 $method = $_SERVER['REQUEST_METHOD'];
@@ -204,7 +205,7 @@ if ($method === 'POST') {
             echo json_encode(['images' => [], 'count' => 0]);
             exit();
         }
-        exigirSesionCdn($id_empresa);
+        exigirSesionOLecturaInternaCdn($id_empresa);
         $galleryPath = 'images/' . intval($id_empresa) . '/';
         if (!is_dir($galleryPath)) {
             echo json_encode(['images' => [], 'count' => 0]);
@@ -228,7 +229,7 @@ if ($method === 'POST') {
             echo json_encode(['images' => [], 'count' => 0]);
             exit();
         }
-        exigirSesionCdn($id);
+        exigirSesionOLecturaInternaCdn($id);
         $galleryPath = 'images/' . $id . '/gallery/' . $product . '/';
         if (!is_dir($galleryPath)) {
             // Buscar coincidencia por prefijo: 'chaqueta' encuentra 'chaquetas' y viceversa
@@ -255,7 +256,7 @@ if ($method === 'POST') {
     if ($action === 'gallery_categories') {
         $id = intval($id_empresa ?? 0);
         if (!$id) { echo json_encode(['categories' => []]); exit(); }
-        exigirSesionCdn($id);
+        exigirSesionOLecturaInternaCdn($id);
         $base = 'images/' . $id . '/gallery/';
         $cats = [];
         if (is_dir($base)) {

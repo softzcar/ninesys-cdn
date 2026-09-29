@@ -99,3 +99,56 @@ function exigirSesionCdn(?int $idEmpresaSolicitado): void
         exit();
     }
 }
+
+/**
+ * Obtiene el header X-Internal-Token si existe en la petición.
+ */
+function obtenerInternalTokenHeader(): string
+{
+    if (!empty($_SERVER['HTTP_X_INTERNAL_TOKEN'])) {
+        return $_SERVER['HTTP_X_INTERNAL_TOKEN'];
+    }
+    if (!empty($_SERVER['REDIRECT_HTTP_X_INTERNAL_TOKEN'])) {
+        return $_SERVER['REDIRECT_HTTP_X_INTERNAL_TOKEN'];
+    }
+    if (function_exists('getallheaders')) {
+        foreach (getallheaders() as $name => $value) {
+            if (strcasecmp($name, 'X-Internal-Token') === 0) {
+                return $value;
+            }
+        }
+    }
+    return '';
+}
+
+/**
+ * Valida si el token interno provisto coincide con MSG_SERVICE_INTERNAL_TOKEN.
+ */
+function esTokenInternoValido(string $token): bool
+{
+    if ($token === '') {
+        return false;
+    }
+    $expected = getenv('MSG_SERVICE_INTERNAL_TOKEN') ?: '';
+    if ($expected === '') {
+        return false;
+    }
+    return hash_equals($expected, $token);
+}
+
+/**
+ * Exige un JWT de sesión válido en Authorization: Bearer O un token de servicio
+ * de solo lectura en X-Internal-Token (MSG_SERVICE_INTERNAL_TOKEN) para endpoints de lectura.
+ */
+function exigirSesionOLecturaInternaCdn(?int $idEmpresaSolicitado): void
+{
+    $internalToken = obtenerInternalTokenHeader();
+    if ($internalToken !== '' && esTokenInternoValido($internalToken)) {
+        // Autenticado por servicio interno (lectura autorizada)
+        return;
+    }
+
+    // Si no tiene token interno válido, exige sesión JWT estándar
+    exigirSesionCdn($idEmpresaSolicitado);
+}
+
