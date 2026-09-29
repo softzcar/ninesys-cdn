@@ -88,15 +88,16 @@ if ($action === 'save_obs_image' && $method === 'POST') {
         exit();
     }
 
-    $targetDir = 'images/' . $idEmp . '/';
+    $targetDir = __DIR__ . '/images/' . $idEmp . '/';
     if (!file_exists($targetDir)) {
         mkdir($targetDir, 0755, true);
     }
     $targetFile = $targetDir . 'obs_' . $idOrd . '_' . $idx . '.png';
+    $relFile = 'images/' . $idEmp . '/obs_' . $idOrd . '_' . $idx . '.png';
 
     // Reutilizar si ya existe en disco
     if (file_exists($targetFile) && filesize($targetFile) > 0) {
-        echo json_encode(['success' => true, 'url' => $baseUrl . $targetFile]);
+        echo json_encode(['success' => true, 'url' => $baseUrl . $relFile]);
         exit();
     }
 
@@ -119,10 +120,15 @@ if ($action === 'save_obs_image' && $method === 'POST') {
         exit();
     }
 
-    file_put_contents($targetFile, $binary);
+    $saved = file_put_contents($targetFile, $binary);
+    if ($saved === false) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'error' => 'No se pudo guardar la imagen en disco.']);
+        exit();
+    }
     chmod($targetFile, 0644);
 
-    echo json_encode(['success' => true, 'url' => $baseUrl . $targetFile]);
+    echo json_encode(['success' => true, 'url' => $baseUrl . $relFile]);
     exit();
 }
 
