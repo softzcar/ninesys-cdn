@@ -63,6 +63,69 @@ $aprobada   = isset($_REQUEST['aprobada'])   ? $_REQUEST['aprobada']   : null;
 // Create Path
 $imagePath = 'images/' . $id_empresa . '/';
 
+// ── Guardado de imagen base64 de observaciones (llamado interno por ninesys-api) ──
+$action = $_REQUEST['action'] ?? '';
+if ($action === 'save_obs_image' && $method === 'POST') {
+    $internalToken = obtenerInternalTokenHeader();
+    if (!esTokenInternoValido($internalToken)) {
+        http_response_code(401);
+        echo json_encode(['success' => false, 'error' => 'Token interno inválido']);
+        exit();
+    }
+    $rawInput = file_get_contents('php://input');
+    $input = json_decode($rawInput, true);
+    if (!is_array($input)) {
+        $input = $_POST;
+    }
+    $idEmp = intval($input['id_empresa'] ?? $_REQUEST['id_empresa'] ?? 0);
+    $idOrd = intval($input['id_orden'] ?? $_REQUEST['id_orden'] ?? 0);
+    $idx   = intval($input['index'] ?? $_REQUEST['index'] ?? 0);
+    $data  = (string) ($input['data'] ?? '');
+
+    if ($idEmp <= 0 || $idOrd <= 0 || empty($data)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Parámetros incompletos (id_empresa, id_orden, data).']);
+        exit();
+    }
+
+    $targetDir = 'images/' . $idEmp . '/';
+    if (!file_exists($targetDir)) {
+        mkdir($targetDir, 0755, true);
+    }
+    $targetFile = $targetDir . 'obs_' . $idOrd . '_' . $idx . '.png';
+
+    // Reutilizar si ya existe en disco
+    if (file_exists($targetFile) && filesize($targetFile) > 0) {
+        echo json_encode(['success' => true, 'url' => $baseUrl . $targetFile]);
+        exit();
+    }
+
+    if (preg_match('/^data:image\/(\w+);base64,(.+)$/is', $data, $m)) {
+        $binary = base64_decode($m[2]);
+    } else {
+        $binary = base64_decode($data);
+    }
+
+    if ($binary === false || strlen($binary) < 10) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Contenido de imagen inválido.']);
+        exit();
+    }
+
+    $info = @getimagesizefromstring($binary);
+    if ($info === false) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'El contenido no es una imagen válida.']);
+        exit();
+    }
+
+    file_put_contents($targetFile, $binary);
+    chmod($targetFile, 0644);
+
+    echo json_encode(['success' => true, 'url' => $baseUrl . $targetFile]);
+    exit();
+}
+
 // ── Subida de imágenes de galería de catálogo (se maneja antes del bloque POST) ──
 $gallery_action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 if ($gallery_action === 'gallery_upload') {
